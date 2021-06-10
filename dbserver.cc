@@ -22,15 +22,19 @@ extern int ipc_pro_log_ctl;
 
 #define DBSERVER_DBUSSEND(FUNC) \
     char *ret = NULL; \
+    DBusDbServer* dbserver_proxy_ = NULL; \
     dbus_mutex_lock(); \
     try { \
         DBus::Connection conn = get_dbus_conn(); \
-        DBusDbServer* dbserver_proxy_ = new DBusDbServer(conn, DBSERVER_PATH, DBSERVER, interface); \
+        dbserver_proxy_ = new DBusDbServer(conn, DBSERVER_PATH, DBSERVER, interface); \
         auto config = dbserver_proxy_->FUNC(json); \
         ret = g_strdup(config.c_str()); \
         delete dbserver_proxy_; \
     } catch (DBus::Error err) { \
         ipc_pro_log_ctl && printf("DBus::Error - %s\n", err.what()); \
+        if (NULL != dbserver_proxy_) { \
+            delete dbserver_proxy_; \
+        } \
     } \
     dbus_mutex_unlock(); \
     return ret;
