@@ -21,15 +21,19 @@ extern int ipc_pro_log_ctl;
 
 #define STORAGEMANAGER_DBUSSEND(FUNC) \
     char *ret = NULL; \
+    DBusStorageManager* storage_manage_proxy_ = NULL; \
     dbus_mutex_lock(); \
     try { \
         DBus::Connection conn = get_dbus_conn(); \
-        DBusStorageManager* storage_manage_proxy_ = new DBusStorageManager(conn, STORAGEMANAGER_PATH, STORAGEMANAGER, STORAGEMANAGER_INTERFACE); \
+        storage_manage_proxy_ = new DBusStorageManager(conn, STORAGEMANAGER_PATH, STORAGEMANAGER, STORAGEMANAGER_INTERFACE); \
         auto config = storage_manage_proxy_->FUNC(json); \
         ret = g_strdup(config.c_str()); \
         delete storage_manage_proxy_; \
     } catch (DBus::Error err) { \
         ipc_pro_log_ctl && printf("DBus::Error - %s\n", err.what()); \
+        if (storage_manage_proxy_) { \
+            delete storage_manage_proxy_; \
+        } \
     } \
     dbus_mutex_unlock(); \
     return ret;

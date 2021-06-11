@@ -21,15 +21,19 @@ extern int ipc_pro_log_ctl;
 
 #define NETSERVER_DBUSSEND(FUNC) \
     char *ret = NULL; \
+    DBusNetServer* netserver_proxy_ = NULL; \
     dbus_mutex_lock(); \
     try { \
         DBus::Connection conn = get_dbus_conn(); \
-        DBusNetServer* netserver_proxy_ = new DBusNetServer(conn, NETSERVER_PATH, NETSERVER_BUS_NAME, NETSERVER_INTERFACE); \
+        netserver_proxy_ = new DBusNetServer(conn, NETSERVER_PATH, NETSERVER_BUS_NAME, NETSERVER_INTERFACE); \
         auto config = netserver_proxy_->FUNC(json); \
         ret = g_strdup(config.c_str()); \
         delete netserver_proxy_; \
     } catch (DBus::Error err) { \
         ipc_pro_log_ctl && printf("DBus::Error - %s\n", err.what()); \
+        if (NULL != netserver_proxy_) { \
+            delete netserver_proxy_; \
+        } \
     } \
     dbus_mutex_unlock(); \
     return ret;

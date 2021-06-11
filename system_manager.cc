@@ -20,29 +20,37 @@
 extern int ipc_pro_log_ctl;
 
 #define SYSTEMMANAGER_DBUSSEND_1(FUNC) \
+    DBusSystemManager* system_manager_proxy_ = NULL; \
     dbus_mutex_lock(); \
     try { \
         DBus::Connection conn = get_dbus_conn(); \
-        DBusSystemManager* system_manager_proxy_ = new DBusSystemManager(conn, SYSTEM_MANAGER_PATH, SYSTEM_MANAGER, SYSTEM_MANAGER_INTERFACE); \
+        system_manager_proxy_ = new DBusSystemManager(conn, SYSTEM_MANAGER_PATH, SYSTEM_MANAGER, SYSTEM_MANAGER_INTERFACE); \
         system_manager_proxy_->FUNC(); \
         delete system_manager_proxy_; \
     } catch (DBus::Error err) { \
         ipc_pro_log_ctl && printf("DBus::Error - %s\n", err.what()); \
+        if (NULL != system_manager_proxy_) { \
+            delete system_manager_proxy_; \
+        } \
     } \
     dbus_mutex_unlock(); \
     return NULL;
 
 #define SYSTEMMANAGER_DBUSSEND_2(FUNC) \
     char *ret = NULL; \
+    DBusSystemManager* system_manager_proxy_ = NULL; \
     dbus_mutex_lock(); \
     try { \
         DBus::Connection conn = get_dbus_conn(); \
-        DBusSystemManager* system_manager_proxy_ = new DBusSystemManager(conn, SYSTEM_MANAGER_PATH, SYSTEM_MANAGER, SYSTEM_MANAGER_INTERFACE); \
+        system_manager_proxy_ = new DBusSystemManager(conn, SYSTEM_MANAGER_PATH, SYSTEM_MANAGER, SYSTEM_MANAGER_INTERFACE); \
         auto config = system_manager_proxy_->FUNC(json); \
         ret = g_strdup(config.c_str()); \
         delete system_manager_proxy_; \
     } catch (DBus::Error err) { \
         ipc_pro_log_ctl && printf("DBus::Error - %s\n", err.what()); \
+        if (NULL != system_manager_proxy_) { \
+            delete system_manager_proxy_; \
+        } \
     } \
     dbus_mutex_unlock(); \
     return ret;
